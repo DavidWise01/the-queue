@@ -1,0 +1,182 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="author" content="David Lee Wise / ROOT0 / TriPod LLC">
+<title>THE QUEUE · OCCUPATIONAL · UD0</title>
+<style>
+*{box-sizing:border-box}
+:root{--fire:#ff7a3c;--fire2:#d85f26;--amber:#e0952a;--amber2:#b0741c;--steel:#3a6079;--steel2:#2b4657;
+  --ink:#2a2620;--dim:#6f675c;--grn:#2e8b57;--panel:rgba(255,253,249,.76);--edge:rgba(216,95,38,.24);--edge2:rgba(216,95,38,.12)}
+html,body{margin:0;height:100%}
+body{background:#f4efe6;color:var(--ink);font:15px/1.55 'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+#bg{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:block}
+.desk{position:relative;z-index:2;max-width:900px;margin:0 auto;padding:24px 16px 56px}
+.dtag{font:600 11px/1 ui-monospace,'Cascadia Code','Segoe UI Mono',monospace;letter-spacing:.32em;text-transform:uppercase;color:var(--fire2)}
+.dtag b{color:var(--fire)}
+h1{margin:.35em 0 .1em;font-size:clamp(26px,4.6vw,42px);font-weight:800;letter-spacing:.01em;color:#241f18}
+.sub{color:var(--dim);max-width:66ch;margin:.2em 0 0}
+.drag{display:inline-block;margin-left:10px;font:700 10px/1 ui-monospace,monospace;letter-spacing:.14em;color:var(--amber2);border:1px solid var(--amber);border-radius:999px;padding:4px 9px;vertical-align:middle;white-space:nowrap}
+.tier{display:inline-flex;gap:6px;align-items:center;margin-top:14px;font:600 11px/1 ui-monospace,monospace;letter-spacing:.14em}
+.chip{padding:5px 10px;border-radius:999px;border:1px solid var(--edge);background:var(--panel)}
+.chip.lit{color:var(--grn);border-color:rgba(46,139,87,.4)}
+.chip.amb{color:var(--amber2);border-color:rgba(176,116,28,.5)}
+.card{margin-top:20px;background:var(--panel);border:1px solid var(--edge);border-radius:16px;backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);box-shadow:0 14px 44px rgba(140,70,20,.13)}
+.stagewrap{padding:14px}
+#stage{width:100%;height:auto;display:block;border-radius:10px;background:rgba(255,252,246,.7);border:1px solid var(--edge2);touch-action:none;cursor:grab}
+#stage:active{cursor:grabbing}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:0 14px 14px}
+.btn{cursor:pointer;border:1px solid var(--edge);background:#fffdf8;color:var(--ink);padding:9px 14px;border-radius:10px;font:600 13px/1 'Segoe UI',system-ui;letter-spacing:.02em;transition:.15s}
+.btn:hover{border-color:var(--fire);box-shadow:0 0 14px rgba(255,122,60,.24)}
+.btn.on{background:linear-gradient(180deg,#ff8a4a,#ec6a2a);border-color:#ec6a2a;color:#fff}
+.rng{display:flex;align-items:center;gap:8px;font:600 12px ui-monospace,monospace;color:var(--dim);background:#fffdf8;border:1px solid var(--edge);border-radius:10px;padding:6px 12px}
+.rng b{color:var(--fire2);min-width:2.4em;text-align:right;display:inline-block}
+input[type=range]{accent-color:var(--fire);width:110px}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--edge2);border-top:1px solid var(--edge);border-radius:0 0 16px 16px;overflow:hidden}
+.ro{background:var(--panel);padding:11px 14px}
+.ro .k{font:600 10px ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.ro .v{font:700 19px ui-monospace,monospace;margin-top:3px;color:var(--ink)}
+.ro .v.g{color:var(--grn)} .ro .v.r{color:var(--fire2)} .ro .v.a{color:var(--amber2)} .ro .v.c{color:var(--steel)}
+.honesty{margin-top:22px;display:grid;gap:10px}
+.hz{background:var(--panel);border:1px solid var(--edge);border-left-width:3px;border-radius:10px;padding:12px 15px}
+.hz.lit{border-left-color:var(--grn)} .hz.amb{border-left-color:var(--amber)}
+.hz h4{margin:0 0 4px;font:700 11px ui-monospace,monospace;letter-spacing:.16em}
+.hz.lit h4{color:var(--grn)} .hz.amb h4{color:var(--amber2)}
+.hz p{margin:0;color:#3c362d;font-size:13.5px}
+.law{margin-top:16px;text-align:center;color:var(--dim);font:italic 500 13px/1.5 Georgia,serif}
+.sig{margin-top:26px;text-align:center;color:var(--dim);font:600 11px ui-monospace,monospace;letter-spacing:.14em}
+.sig b{color:var(--ink)}
+#fail{display:none;position:fixed;left:12px;right:12px;bottom:12px;z-index:99;background:#2a1408;border:1px solid var(--fire);color:#ffe0cf;padding:12px;border-radius:8px;font:12px ui-monospace,monospace;white-space:pre-wrap}
+</style></head><body>
+<canvas id="bg"></canvas>
+<div class="desk">
+  <div class="dtag">⚒ <b>OCCUPATIONAL</b> · the working machine · the live fire of the agents</div>
+  <h1>THE QUEUE <span class="drag">✋ DRAG · SLIDE · TAP</span></h1>
+  <p class="sub">Add servers and the line shortens — but not smoothly. As the desks fill toward capacity, the wait doesn't rise, it <b>explodes</b>. <b>Slide</b> the arrival and service rates, <b>drag</b> across the desks to add or remove servers, and watch how close to the edge you dare run the shop.</p>
+  <div class="tier"><span class="chip lit">◆ LIT</span><span class="chip amb">▲ AMBER</span></div>
+  <div class="card">
+    <div class="stagewrap"><canvas id="stage" width="900" height="440"></canvas></div>
+    <div class="controls"><label class="rng">arrivals λ <input type="range" id="lam" min="1" max="30" value="9" step="1"><b id="lamv">9</b>/hr</label><label class="rng">service μ <input type="range" id="mu" min="1" max="12" value="4" step="1"><b id="muv">4</b>/hr</label></div>
+    <div class="readout"><div class="ro"><div class="k">servers</div><div class="v" id="roServ">3</div></div><div class="ro"><div class="k">utilisation ρ</div><div class="v" id="roRho">—</div></div><div class="ro"><div class="k">chance of waiting</div><div class="v" id="roPw">—</div></div><div class="ro"><div class="k">average wait</div><div class="v" id="roWq">—</div></div><div class="ro"><div class="k">queue length</div><div class="v" id="roLq">—</div></div><div class="ro"><div class="k">the shop</div><div class="v" id="roState">—</div></div></div>
+  </div>
+  <div class="honesty">
+    <div class="hz lit"><h4>◆ LIT — verified / checkable</h4><p>A textbook <b>M/M/c</b> queue: Poisson arrivals at rate λ, c servers each at rate μ, utilisation ρ = λ/(cμ). The chance an arrival must wait is the <b>Erlang-C</b> formula; the average wait Wq = P(wait)/(cμ − λ); the average queue length Lq = λ·Wq (Little's Law). All computed live — slide λ and μ, drag to set the servers, and as ρ → 1 the wait diverges to infinity. Standard, real queueing theory.</p></div>
+    <div class="hz amb"><h4>▲ AMBER — the figure</h4><p>Real service systems break M/M/c's assumptions — arrivals cluster, service times aren't exponential, customers balk and abandon, and demand swings by hour. The instrument is the exact classical model; treat the minutes as the shape of congestion, not a forecast for a specific counter.</p></div>
+  </div>
+  <div class="law">OCCUPATIONAL: the fire is lit and the anvil is warm — but the work does not do itself.</div>
+  <div class="sig">David Lee Wise / ROOT0 / TriPod LLC &nbsp;·&nbsp; with <b>AVAN</b></div>
+</div>
+<div id="fail"></div>
+<script>
+window.onerror=function(m,s,l,c,e){var f=document.getElementById('fail');if(f){f.style.display='block';f.textContent='⚠ '+m+' @'+l+':'+c;}};
+</script>
+<script>
+(function(){
+  var cv=document.getElementById('bg'); if(!cv) return;
+  function fallback(){var c=cv.getContext&&cv.getContext('2d');if(!c)return;
+    function f(){var w=cv.width=innerWidth,h=cv.height=innerHeight;var g=c.createRadialGradient(w*.5,h*.42,0,w*.5,h*.42,Math.max(w,h)*.9);g.addColorStop(0,'#f7f2ea');g.addColorStop(1,'#ece4d6');c.fillStyle=g;c.fillRect(0,0,w,h);}f();addEventListener('resize',f);}
+  var gl;try{gl=cv.getContext('webgl',{antialias:true,alpha:false})||cv.getContext('experimental-webgl');}catch(e){}
+  if(!gl){fallback();return;}
+  function gear(teeth,ro,ri,rh){var pts=[],step=Math.PI*2/teeth;
+    for(var t=0;t<teeth;t++){var a=t*step;
+      pts.push([Math.cos(a)*ri,Math.sin(a)*ri]);
+      pts.push([Math.cos(a+step*0.16)*ro,Math.sin(a+step*0.16)*ro]);
+      pts.push([Math.cos(a+step*0.34)*ro,Math.sin(a+step*0.34)*ro]);
+      pts.push([Math.cos(a+step*0.5)*ri,Math.sin(a+step*0.5)*ri]);}
+    var seg=[];for(var i=0;i<pts.length;i++){var b=pts[(i+1)%pts.length];seg.push(pts[i][0],pts[i][1],b[0],b[1]);}
+    for(var i=0;i<28;i++){var a=i/28*6.283,b=(i+1)/28*6.283;seg.push(Math.cos(a)*rh,Math.sin(a)*rh,Math.cos(b)*rh,Math.sin(b)*rh);}
+    for(var k=0;k<5;k++){var a=k/5*6.283;seg.push(Math.cos(a)*rh,Math.sin(a)*rh,Math.cos(a)*ri,Math.sin(a)*ri);}
+    return seg;}
+  var gA=gear(14,1.0,0.74,0.28), gB=gear(10,0.78,0.56,0.22);
+  function buf(arr){var b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(arr),gl.STATIC_DRAW);return b;}
+  var bA=buf(gA), bB=buf(gB);
+  var VS='attribute vec2 p;uniform float asp,ang,sc,offx,offy;void main(){float c=cos(ang),s=sin(ang);vec2 q=vec2(p.x*c-p.y*s,p.x*s+p.y*c);q*=sc;q.x+=offx;q.y+=offy;q.x/=asp;gl_Position=vec4(q,0.0,1.0);}';
+  var FS='precision mediump float;uniform float a;void main(){gl_FragColor=vec4(1.0,0.48,0.20,a);}';
+  function sh(ty,s){var o=gl.createShader(ty);gl.shaderSource(o,s);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw gl.getShaderInfoLog(o);return o;}
+  var prog;try{prog=gl.createProgram();gl.attachShader(prog,sh(gl.VERTEX_SHADER,VS));gl.attachShader(prog,sh(gl.FRAGMENT_SHADER,FS));gl.linkProgram(prog);if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw'link';}catch(e){fallback();return;}
+  var uAsp=gl.getUniformLocation(prog,'asp'),uAng=gl.getUniformLocation(prog,'ang'),uSc=gl.getUniformLocation(prog,'sc'),uOx=gl.getUniformLocation(prog,'offx'),uOy=gl.getUniformLocation(prog,'offy'),uA=gl.getUniformLocation(prog,'a');
+  var aLoc=gl.getAttribLocation(prog,'p');
+  gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+  function drawGear(b,n,ang,sc,ox,oy,al){gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.enableVertexAttribArray(aLoc);gl.vertexAttribPointer(aLoc,2,gl.FLOAT,false,0,0);
+    gl.uniform1f(uAsp,ASP);gl.uniform1f(uAng,ang);gl.uniform1f(uSc,sc);gl.uniform1f(uOx,ox);gl.uniform1f(uOy,oy);gl.uniform1f(uA,al);gl.lineWidth(1);gl.drawArrays(gl.LINES,0,n/2);}
+  var ASP=1,t0=null;
+  function frame(tm){requestAnimationFrame(frame);if(t0===null)t0=tm;var tt=(tm-t0)*0.001;
+    var w=cv.width=innerWidth,h=cv.height=innerHeight;gl.viewport(0,0,w,h);ASP=w/h;
+    gl.clearColor(0.965,0.949,0.925,1.0);gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.useProgram(prog);
+    drawGear(bA,gA.length, tt*0.32, 0.5,-0.46,-0.12, 0.16);
+    drawGear(bB,gB.length, -tt*0.45+0.3, 0.42, 0.42, 0.28, 0.13);
+    drawGear(bB,gB.length, tt*0.4-1.0, 0.3, 0.62,-0.5, 0.10);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+<script>
+(function(){
+  var cv=document.getElementById('stage'); var ctx=cv&&cv.getContext('2d'); if(!ctx)return;
+  var DPR=Math.min(window.devicePixelRatio||1,2);
+  function size(){var w=cv.clientWidth||900;cv.width=Math.round(w*DPR);cv.height=Math.round((w*440/900)*DPR);}
+  size(); addEventListener('resize',size);
+  var env={cv:cv,ctx:ctx,DPR:DPR,W:function(){return cv.width/DPR;},H:function(){return cv.height/DPR;},
+    set:function(id,val,cls){var e=document.getElementById(id);if(e){e.textContent=val;if(cls!=null)e.className='v '+cls;}},
+    evt:function(e){var r=cv.getBoundingClientRect();var sx=(cv.width/DPR)/r.width, sy=(cv.height/DPR)/r.height;
+      var cx=(e.touches?e.touches[0].clientX:e.clientX), cy=(e.touches?e.touches[0].clientY:e.clientY);
+      return {x:(cx-r.left)*sx, y:(cy-r.top)*sy};}};
+  var t0=null, inited=false;
+  function loop(t){requestAnimationFrame(loop);if(t0===null)t0=t;env.t=(t-t0)*0.001;
+    if(!inited&&window.__INST__){inited=true;if(window.__INST__.init)window.__INST__.init(env);}
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    if(window.__INST__&&window.__INST__.draw)window.__INST__.draw(env);}
+  requestAnimationFrame(loop);
+})();
+</script>
+<script>
+  function onDrag(env,pick,move){var handle=null;
+    function down(e){e.preventDefault();var p=env.evt(e);handle=pick(p);if(handle!=null)move(handle,p);}
+    function mv(e){if(handle==null)return;e.preventDefault();move(handle,env.evt(e));}
+    function up(){handle=null;}
+    env.cv.addEventListener('pointerdown',down);env.cv.addEventListener('pointermove',mv);
+    window.addEventListener('pointerup',up);env.cv.addEventListener('touchstart',down,{passive:false});env.cv.addEventListener('touchmove',mv,{passive:false});window.addEventListener('touchend',up);
+  }
+
+(function(){
+  var lam=9, mu=4, c=3, ENV;
+  function erlang(){var a=lam/mu, rho=a/c;
+    if(rho>=1)return {rho:rho,pw:1,wq:Infinity,lq:Infinity,unst:true};
+    var sum=1,term=1;for(var k=1;k<c;k++){term*=a/k;sum+=term;}
+    var last=term*a/c; var pw=(last/(1-rho))/(sum+last/(1-rho));
+    var wq=pw/(c*mu-lam), lq=lam*wq;
+    return {rho:rho,pw:pw,wq:wq,lq:lq,unst:false};}
+  function refresh(){if(!ENV)return;var e=erlang();
+    ENV.set('roServ',c+'');
+    ENV.set('roRho',(e.rho*100).toFixed(0)+'%',e.rho<0.7?'g':(e.rho<0.9?'a':'r'));
+    ENV.set('roPw',e.unst?'100%':(e.pw*100).toFixed(0)+'%',e.pw<0.4?'g':(e.pw<0.7?'a':'r'));
+    ENV.set('roWq',e.unst?'∞ (unstable)':(e.wq*60).toFixed(1)+' min',e.unst?'r':(e.wq*60<10?'g':(e.wq*60<30?'a':'r')));
+    ENV.set('roLq',e.unst?'∞':e.lq.toFixed(1)+' jobs','c');
+    ENV.set('roState',e.unst?'overwhelmed — the line grows forever':(e.rho<0.7?'flowing':(e.rho<0.9?'tight':'on the edge')),e.unst?'r':(e.rho<0.7?'g':(e.rho<0.9?'a':'r')));}
+  var x0=50, slot=0;
+  window.__INST__={init:function(env){ENV=env;
+    document.getElementById('lam').oninput=function(){lam=+this.value;document.getElementById('lamv').textContent=lam;refresh();};
+    document.getElementById('mu').oninput=function(){mu=+this.value;document.getElementById('muv').textContent=mu;refresh();};
+    onDrag(env,function(p){var w=env.W();return p.y< w*0.20 ? 'srv':'srv';},
+      function(hd,p){var w=env.W();slot=(w-100)/8;var n=Math.round((p.x-x0)/slot);c=Math.max(1,Math.min(8,n));refresh();});
+    refresh();},
+   draw:function(env){var c2=env.ctx,w=env.W(),h=env.H();c2.clearRect(0,0,w,h);var e=erlang();slot=(w-100)/8;
+     // servers row
+     c2.fillStyle='#6f675c';c2.font='600 11px ui-monospace,monospace';c2.textAlign='left';c2.fillText('drag ⇆ to set servers',x0,40);
+     for(var i=0;i<8;i++){var x=x0+i*slot;var on=i<c;
+       c2.fillStyle=on?'rgba(46,139,87,.7)':'rgba(111,103,92,.15)';c2.strokeStyle=on?'#2e8b57':'#b9b0a2';c2.lineWidth=2;
+       c2.fillRect(x,55,slot-10,34);c2.strokeRect(x,55,slot-10,34);
+       if(on){c2.fillStyle='#fff';c2.font='700 12px ui-monospace,monospace';c2.textAlign='center';c2.fillText('▣',x+(slot-10)/2,77);}}
+     // queue of waiting jobs
+     var qN=e.unst?18:Math.min(18,Math.round(e.lq));var qy=h-60;
+     c2.fillStyle='#6f675c';c2.textAlign='left';c2.font='600 11px ui-monospace,monospace';c2.fillText('waiting  ('+(e.unst?'∞':e.lq.toFixed(1))+' jobs)',x0,qy-16);
+     for(var j=0;j<qN;j++){var qx=x0+j*26;c2.fillStyle=e.rho>0.9?'rgba(216,95,38,.8)':'rgba(255,122,60,.7)';c2.beginPath();c2.arc(qx+9,qy,9,0,7);c2.fill();}
+     if(e.unst){c2.fillStyle='#d85f26';c2.font='700 13px ui-monospace,monospace';c2.fillText('… and growing without bound',x0+qN*26+6,qy+4);}
+     // utilisation bar
+     var bw=w-100;c2.fillStyle='rgba(111,103,92,.12)';c2.fillRect(x0,110,bw,14);
+     c2.fillStyle=e.rho<0.7?'#2e8b57':(e.rho<0.9?'#e0952a':'#d85f26');c2.fillRect(x0,110,bw*Math.min(1,e.rho),14);
+     c2.strokeStyle='#d85f26';c2.lineWidth=1;c2.beginPath();c2.moveTo(x0+bw,104);c2.lineTo(x0+bw,130);c2.stroke();
+     c2.fillStyle='#6f675c';c2.font='600 10px ui-monospace,monospace';c2.fillText('utilisation ρ = λ/(cμ) — the wall is at 100%',x0,138);
+   }};
+})();
+</script>
+</body></html>
